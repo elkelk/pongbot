@@ -11,6 +11,7 @@ defmodule Pongbot do
     # Define workers and child supervisors to be supervised
     children = [
        worker(Pongbot.Slack, [slack_token]),
+       worker(Pongbot.Repo, []),
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

@@ -1,5 +1,8 @@
 defmodule Pongbot.Slack do
   use Slack
+  import Ecto.Query
+  alias Pongbot.Game
+  alias Pongbot.Repo
 
   def handle_connect(slack) do
     IO.puts "Connected as #{slack.me.name}"

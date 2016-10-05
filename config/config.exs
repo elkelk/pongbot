@@ -2,8 +2,19 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
+
 config :pongbot, Pongbot.Slack,
-  token: System.get_env("SLACK_TOKEN")
+  token:    System.get_env("SLACK_TOKEN")
+
+config :pongbot, ecto_repos: [Pongbot.Repo]
+
+config :pongbot, Pongbot.Repo,
+  adapter: Ecto.Adapters.Postgres,
+  database: System.get_env("PONGBOT_DB_DATABASE"),
+  username: System.get_env("PONGBOT_DB_USERNAME"),
+  password: System.get_env("PONGBOT_DB_PASSWORD"),
+  host:     System.get_env("PONGBOT_DB_HOST"),
+  port:     System.get_env("PONGBOT_DB_PORT")
 
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
