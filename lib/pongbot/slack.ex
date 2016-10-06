@@ -7,6 +7,7 @@ defmodule Pongbot.Slack do
    @message_types [
      {"ping$", :ping},
      {"help$", :help},
+     {"scores$", :all_scores},
      {"standings$", :standings},
      {"@?[A-z,1-9]*\svs\s@?[A-z,1-9]*", :stats},
      {"@?[A-z,1-9]*\sversus\s@?[A-z,1-9]*", :stats},
@@ -42,6 +43,10 @@ defmodule Pongbot.Slack do
   def act_on_message({:ping, message}, slack) do
     send_message("<@#{message.user}> pong", message.channel, slack)
   end
+  def act_on_message({:all_scores, message}, slack) do
+    send_message("<@#{message.user}> Ok here are the scores for this season:", message.channel, slack)
+    write_scores(standings, message, slack)
+  end
   def act_on_message({:standings, message}, slack) do
     send_message("<@#{message.user}> Ok here are the standings:", message.channel, slack)
     write_standings(standings, message, slack)
@@ -62,6 +67,7 @@ defmodule Pongbot.Slack do
     send_message("<@#{message.user}> Here are the options:", message.channel, slack)
     send_message("ping: check if I'm online", message.channel, slack)
     send_message("standings: see the current season standings", message.channel, slack)
+    send_message("scores: see all of the scores for the current season", message.channel, slack)
     send_message("<a player> vs <another player>: see the number of wins for the current season", message.channel, slack)
     send_message("<a player> beat <another player>: record a win for the current season", message.channel, slack)
   end
@@ -71,10 +77,64 @@ defmodule Pongbot.Slack do
   def act_on_message({:unknown, message}, slack) do
   end
 
+  defp write_scores(rows, message, slack) do
+    summary = process_score_rows(rows, %{})
+
+    Enum.each(summary, fn({key, player_set}) ->
+      text = Enum.reduce(player_set, key, fn ({key, val}, acc) ->
+        "#{acc} <#{key} #{val}> "
+      end)
+      send_message(text, message.channel, slack)
+    end)
+  end
+
+  defp process_score_rows([], summary) do
+    summary
+  end
+  defp process_score_rows(rows, summary) do
+    [row | tail] = rows
+    summary = merge_score(row, summary)
+    process_score_rows(tail, summary)
+  end
+
+  defp merge_score({winner, loser, count}, summary) do
+    sorted = Enum.sort([winner, loser])
+    key = Enum.join(sorted, " vs ")
+    current_set = summary[key]
+    summary = Map.put(summary, key, current_set || %{})
+    new_set = Map.put(summary[key], winner, count)
+    Map.put(summary, key, new_set)
+  end
+
   defp write_standings(rows, message, slack) do
-    Enum.map(rows, fn(row) ->
-      {winner, loser, count} = row
-      send_message("#{winner} beat #{loser} #{count} times", message.channel, slack)
+    summary = process_score_rows(rows, %{})
+    standings = parse_standings(summary)
+    text = Enum.reduce(standings, "", fn ({key, val}, acc) ->
+      "#{acc} | #{key}: #{val}"
+    end)
+    send_message(text, message.channel, slack)
+  end
+
+  defp parse_standings(summary) do
+    Enum.reduce(summary, %{}, fn({key, player_set}, acc) ->
+      case Map.keys(player_set) do
+        [player1, player2] ->
+          cond do
+            player_set[player1] > player_set[player2] ->
+              current_value = acc[player1] || 0
+              Map.put(acc, player1, current_value + 1)
+            player_set[player1] < player_set[player2] ->
+              current_value = acc[player2] || 0
+              Map.put(acc, player2, current_value + 1)
+            true ->
+              acc
+          end
+        [player1] ->
+          current_value = acc[player1] || 0
+          Map.put(acc, player1, current_value + 1)
+        _ ->
+          acc
+      end
     end)
   end
 
