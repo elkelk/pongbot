@@ -14,7 +14,7 @@ defmodule Pongbot.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger, :slack, :postgrex, :ecto],
+    [applications: [:logger, :slack, :postgrex, :ecto, :timex],
      mod: {Pongbot, []}]
   end
 
@@ -28,9 +28,12 @@ defmodule Pongbot.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:slack, "~> 0.7.1"},
-     {:websocket_client, git: "https://github.com/jeremyong/websocket_client"},
-     {:postgrex, ">= 0.0.0"},
-     {:ecto, "~> 2.0.0"}]
+    [
+      {:slack, "~> 0.7.1"},
+      {:websocket_client, git: "https://github.com/jeremyong/websocket_client"},
+      {:postgrex, ">= 0.0.0"},
+      {:ecto, "~> 2.0.0"},
+      {:timex, "~> 3.0"}
+    ]
   end
 end
