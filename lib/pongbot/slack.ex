@@ -34,7 +34,7 @@ defmodule Pongbot.Slack do
 
   def parse(message, slack) do
     IO.puts "Received message: #{message.text}"
-    {_, type} = Enum.find(@message_types, {nil, :unknown}, fn {reg, type} ->
+    {_, type} = Enum.find(@message_types, {nil, :unknown}, fn {reg, _type} ->
        String.match?(message.text, ~r/<@#{slack.me.id}>:?\s#{reg}/)
      end)
     {type, message}
@@ -74,7 +74,7 @@ defmodule Pongbot.Slack do
   def act_on_message({:noop, message}, slack) do
     send_message("<@#{message.user}> I'm not sure what you want.", message.channel, slack)
   end
-  def act_on_message({:unknown, message}, slack) do
+  def act_on_message({:unknown, _message}, _slack) do
   end
 
   defp write_scores(rows, message, slack) do
@@ -116,7 +116,7 @@ defmodule Pongbot.Slack do
   end
 
   defp parse_standings(summary) do
-    Enum.reduce(summary, %{}, fn({key, player_set}, acc) ->
+    Enum.reduce(summary, %{}, fn({_key, player_set}, acc) ->
       case Map.keys(player_set) do
         [player1, player2] ->
           cond do
@@ -143,7 +143,13 @@ defmodule Pongbot.Slack do
     [winner | tail] = tail
     [_verb | tail] = tail
     [loser | _tail] = tail
-    {String.replace(winner, "@", ""), String.replace(loser, "@", "")}
+    {clean_name(winner), clean_name(loser)}
+  end
+
+  defp clean_name(name) do
+    name
+    |> String.replace("@", "")
+    |> String.downcase()
   end
 
   defp current_season() do
