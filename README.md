@@ -1,6 +1,9 @@
 # Pongbot
 A slack bot written in elixir for keeping track of scores
 
+![pongbot in action](https://dl.dropboxusercontent.com/spa/10hrj3hkmkbc5iz/_x4mb8lu.png "Pongbot in action")
+
+
 ## Installation
 - Clone the repository
 - Create a slack integration bot by visiting https://your-co.slack.com/apps/manage/custom-integrations
