@@ -7,6 +7,7 @@ defmodule Pongbot.Slack do
    @message_types [
      {"ping$", :ping},
      {"help$", :help},
+     {"challenge\s[A-z,1-9]*$", :challenge},
      {"scores$", :all_scores},
      {"standings$", :standings},
      {"@?[A-z,1-9]*\svs\s@?[A-z,1-9]*", :stats},
@@ -43,6 +44,11 @@ defmodule Pongbot.Slack do
   def act_on_message({:ping, message}, slack) do
     send_message("<@#{message.user}> pong", message.channel, slack)
   end
+  def act_on_message({:challenge, message}, slack) do
+    name = String.replace(message.text, ~r/.*challenge\s/, "")
+    send_message("<@#{message.user}> has challenged #{name}", message.channel, slack)
+    send_message("#{name}, do you accept this challenge?", message.channel, slack)
+  end
   def act_on_message({:all_scores, message}, slack) do
     send_message("<@#{message.user}> Ok here are the scores for this season:", message.channel, slack)
     write_scores(standings, message, slack)
@@ -68,6 +74,7 @@ defmodule Pongbot.Slack do
     send_message("ping: check if I'm online", message.channel, slack)
     send_message("standings: see the current season standings", message.channel, slack)
     send_message("scores: see all of the scores for the current season", message.channel, slack)
+    send_message("challenge <a player>: initiate a challenge", message.channel, slack)
     send_message("<a player> vs <another player>: see the number of wins for the current season", message.channel, slack)
     send_message("<a player> beat <another player>: record a win for the current season", message.channel, slack)
   end
