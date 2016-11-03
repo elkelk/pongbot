@@ -123,10 +123,14 @@ defmodule Pongbot.Slack do
   end
 
   defp parse_standings(summary) do
+    minimum_threshhold = 5
     Enum.reduce(summary, %{}, fn({_key, player_set}, acc) ->
       case Map.keys(player_set) do
         [player1, player2] ->
+          number_of_games = player_set[player1] + player_set[player2]
           cond do
+            number_of_games < minimum_threshhold ->
+              acc
             player_set[player1] > player_set[player2] ->
               current_value = acc[player1] || 0
               Map.put(acc, player1, current_value + 1)
@@ -137,8 +141,13 @@ defmodule Pongbot.Slack do
               acc
           end
         [player1] ->
-          current_value = acc[player1] || 0
-          Map.put(acc, player1, current_value + 1)
+          cond do
+            player_set[player1] >= minimum_threshhold ->
+              current_value = acc[player1] || 0
+              Map.put(acc, player1, current_value + 1)
+            true ->
+              acc
+          end
         _ ->
           acc
       end
